@@ -1,0 +1,318 @@
+<style>
+body{
+margin:0;
+padding:0;
+}
+</style>
+<canvas id="canvas" style="background:lightblue;width:100%;height:100%;">
+
+</canvas>
+<script src="./game.js"></script>
+
+<script>
+function findIntersection(line1, line2) {
+  var a1 = line1.y2 - line1.y1;
+  var b1 = line1.x1 - line1.x2;
+  var c1 = a1 * line1.x1 + b1 * line1.y1;
+
+  var a2 = line2.y2 - line2.y1;
+  var b2 = line2.x1 - line2.x2;
+  var c2 = a2 * line2.x1 + b2 * line2.y1;
+
+  var det = a1 * b2 - a2 * b1;
+
+  if (!det) {
+    return null;
+  } else {
+  var det = a1 * b2 - a2 * b1;
+    var x = (b2 * c1 - b1 * c2) / det;
+    var y = (a1 * c2 - a2 * c1) / det;
+    return {
+      x: x,
+      y: y
+    };
+  }
+}
+
+
+Engine.copy(this)
+Start(60)
+function signed(i){
+	return i<0?-i:i
+}
+
+function mmc(int1,int2){
+	let resto = 1
+	let x = int1
+	let y = int2
+	while(resto!=0){
+		resto = x%y
+		x = y
+		y = resto
+	}
+	return (int1*int2)/x
+}
+
+class Polygon extends GameObject {
+	constructor(){
+		super()
+		let numberArr = arguments.filter(o=>typeof("number"))
+		if(numberArr.length>0&&numberArr.length%2 == 0){
+			this.vectors = []	
+			for (var i = 0; i <= numberArr.length - 1; i+=2) {
+				this.vectors.push(new Vector(numberArr[i],numberArr[i+1]))
+			}
+			
+
+		}
+		else
+			this.vectors = arguments.filter(o=>mapType(o,{x:0,y:0}))
+		
+		if(this.vectors.length<=0)return
+		
+		this.lines=[]
+		
+		let last
+		
+		this.vectors.iterate(v=>{
+			if(last != undefined)
+			{
+				this.lines.push(new Line(last.x,last.y,v.x,v.y))
+			}
+			last = v
+		})
+		
+		let first = this.vectors[0]
+		this.lines.push(new Line(last.x,last.y,first.x,first.y))
+			
+	}
+	color='black'
+	Draw(ctx,x,y){
+		ctx.strokeStyle=this.color
+		this.lines.iterate(line=>line.Draw(ctx,x,y))
+	}
+	Update(ctx){
+
+		let polygons = Engine.objects.filter(o=>o instanceof Polygon && this.id != o.id)
+
+
+		this.lines.iterate(line=>
+			polygons.iterate(p=>
+				p.lines.iterate(l=>
+				{
+					if(!!line.offset(this.x,this.y).cross(l.offset(p.x,p.y)))
+					{
+						this.color="red"
+					}
+				}
+				)
+			)
+		)
+	}
+}
+
+class Line
+{
+	constructor(){
+		if(arguments.length>0)
+		{
+			let vectors=arguments.filter(o=>typeof(o)=="object")
+			let line = arguments.find(a=>a instanceof Line)
+			if(line instanceof Line)
+			{
+				line.copy(this)
+			}
+			else if(vectors.length==2)
+			{
+				try{
+					this.v1 = new Vector(vectors[0])
+					this.v2 = new Vector(vectors[1])
+				}
+				catch{throw "Invalid paramaters at: new Line(?)"}
+			}
+			else
+			{
+				let numberArr = arguments.filter(a=>typeof(a)=="number")
+				if(numberArr.length==4)
+				{
+					this.v1.x = numberArr[0]
+					this.v1.y = numberArr[1]
+					this.v2.x = numberArr[2]
+					this.v2.y = numberArr[3]
+				}
+				else throw "Invalid paramaters at: new Line(?)"
+			}
+
+			this.length = Math.hypot(this.v2.y-this.v1.y,this.v2.x-this.v1.x)
+		}
+	}
+	Draw(ctx,x,y){
+		ctx.closePath()
+		ctx.beginPath()
+		ctx.moveTo(x+this.v1.x,y+this.v1.y)
+		ctx.lineTo(x+this.v2.x,y+this.v2.y)
+		ctx.stroke()
+		ctx.closePath()
+	}
+	offset(x,y){
+		return new Line(this.v1.x+x,this.v1.y+y,this.v2.x+x,this.v2.y+y)
+	}
+	concurrent(line){
+		if(!line instanceof Line)throw "Not a Line at line.concurrent(?)"
+		return (this.a * line.b) - (this.b * line.a)
+	}
+	cross(line)
+	{
+		ctx.closePath()
+		let v = this.crossPoint(line)
+		ctx.beginPath();
+		ctx.arc(v.x+Engine.offset.x,v.y+Engine.offset.y,2,0,2 * Math.PI);
+		ctx.fill()
+		ctx.closePath()
+
+		return !!v
+
+	}
+	crossPoint(line)
+	{
+		if(!line instanceof Line)throw "Not a Line at line.cross(?)"
+		let concurrent
+		if(0!= (concurrent = this.concurrent(line))){
+
+			let x = ((line.b * this.c) - (this.b * line.c)) / concurrent
+
+			let y = ((this.a * line.c) - (line.a * this.c)) / concurrent
+
+			return {
+				x:x,
+				y:y
+			}
+
+		}else return false
+	}
+	v1=new Vector()
+	v2= new Vector()
+	get a(){this.setTerms();return this._a}
+	get b(){this.setTerms();return this._b}
+	get c(){this.setTerms();return this._c}
+	set a(v){this._a=v}
+	set b(v){this._b=v}
+	set c(v){this._c=v}
+	get completed(){
+		this.setTerms()
+		return this._a!=0&&this._b!=0&&this._c!=0
+	}
+	setTerms(){
+		this.a = this.v2?.y - this.v1?.y
+		this.b = this.v1?.x - this.v2?.x
+		this.c = this._a * this.v1.x + this._b * this.v1.y
+		//this.c = (this.v1.x * this.v2.y)-(this.v1.y*this.v2.x)
+	}
+	get equation(){
+			return function(X_or_Object_with_XorY_){
+				let a = X_or_Object_with_XorY_
+				let x
+				let y
+				if(typeof(a)=="number")
+					x = a
+				else if (typeof(a?.x)=="number"||typeof(a?.y)=="number"){
+						x = a?.x
+						y = a?.y
+				}
+				else throw "fuck you\n Bad line.equation(?) use"
+
+//sheet
+//((this.v1.x * this.v2.y)+(this.v1.y * x)+(this.v2.x*y))-((this.v1.x*y)+(this.v1.y*this.v2.x)+(this.v2.y*x))
+
+				if(typeof(x)=="number")
+				{
+					this.setTerms()
+					return ((this._a*x)+
+					this._c)/(this._b*-1)
+				}
+				else if(typeof(y)=="number")
+				{
+					this.setTerms()
+					return ((this._b*y)+
+					this._c)/(this._a*-1)
+				}
+
+			}
+	}
+}
+
+// class Vector
+// {
+// 		constructor(VectorOrXY){
+// 				if(arguments.length>0)
+// 				{
+// 					let vector = arguments.find(a=>typeof(a)=="object")
+// 						if(typeof(vector)=="object" && typeof(vector.x)=="number" && typeof(vector.y)=="number")
+							
+// 							vector.copy(this)
+						
+// 						else{
+// 							let numberArr=arguments.filter(a=>typeof(a)=="number")
+// 							if(numberArr.length!=2)
+// 								throw "Invalid paramaters at: new Vector(?)"
+// 							this.x=numberArr[0]
+// 							this.y=numberArr[1]
+// 						}
+// 				}
+// 		}
+// 		x=0
+// 		y=0
+// 		Mxy(v){return this.DivisionOfDifferenceXY(v)}
+// 		Myx(v){return this.DivisionOfDifferenceYX(v)}
+// 		DivisionOfDifferenceYX(vector){
+// 			if(!vector instanceof Vector)
+// 				throw "Passed paramater was not a Vector on operation: vector.DivisionOfDifference(vector)."
+
+// 			return (this.y-vector.y)/(this.x-vector.x)
+
+// 		}
+// 		DivisionOfDifferenceXY(vector){
+// 			if(!vector instanceof Vector)
+// 				throw "Passed paramater was not a Vector on operation: vector.DivisionOfDifference(vector)."
+
+// 			return (this.x-vector.x)/(this.y-vector.y)
+
+// 		}
+// }
+
+// class Counter extends GameObject{
+// 	constructor(){
+// 		super(function(ctx,x,y,key){
+// 			let now = new Date().getTime()
+// 			let deltaT = now - this.last
+// 			if(deltaT >= 1000)
+// 			{
+// 				this.lastcount = this.counter		
+// 				this.counter=0	
+// 				this.last = now	
+// 			}
+// 			this.counter++
+// 			ctx.fillText(Math.floor(this.lastcount)+"/fps",5,10)	
+// 		})
+
+// 		this.counter=0	
+// 		this.last= new Date().getTime()
+
+// 	}
+// }
+
+objects['counter']= new Counter()
+
+Engine.offset.x=100
+Engine.offset.y=50
+
+// Engine.objects.push(new Polygon(0,0,10,10,0,20,-10,10))
+// objects[0].x+=20
+// objects[0].y+=20
+// Engine.objects.push(new Polygon(0,0,10,10,0,20,-10,10))
+// objects[1].x+=20
+// objects[1].y+=20
+
+objects.push(new Polygon(0,0,10,10))
+objects.push(new Polygon(0,10,10,0))
+</script>

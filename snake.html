@@ -1,0 +1,70 @@
+<style>
+
+body{
+text-align: center;
+margin:0;
+padding:0;}
+</style>
+<canvas id="canvas" height="200"width="408"style="background:lightblue;width:90%;height:90%;">
+
+</canvas>
+<script src="./game.js"></script>
+<script src="./snake.js"></script>
+
+<script>
+
+Engine.objects.push(new Snake(0))
+
+gm = new Snake(1)
+
+gm.Control = function(){
+	xd = 0
+	yd = 0
+	if(Engine.keymap['w'])
+		yd -= 1
+	if(Engine.keymap['s'])
+		yd += 1
+	if(Engine.keymap['a'])
+		xd -= 1
+	if(Engine.keymap['d'])
+		xd += 1
+	this.xd = xd
+	this.yd = yd
+
+	let YtoD=(d)=>{switch(d){case 1:return 'd';break;case -1:return 'u';}}
+	let XtoD=(d)=>{switch(d){case 1:return 'r';break;case -1:return 'l';}}
+	switch (this.lastd)
+	{
+		case 'r':
+		case 'l':
+			this.lastd = YtoD(this.yd)??this.lastd
+			break;
+		case 'd':
+		case 'u':
+			this.lastd = XtoD(this.xd)??this.lastd
+	}
+
+}
+
+gm.color='blue'
+
+gm.x+=11*30
+gm.y+=11*15
+
+
+Engine.objects.push(gm)
+
+delete(gm)
+
+Engine.objects.push(new Fruit())
+Engine.objects.push(new Fruit())
+Engine.objects.push(new Fruit())
+Engine.objects.push(new Fruit())
+Engine.objects.push(new Fruit())
+
+Engine.Start(7)
+
+</script>
+<br>
+<br>
+<button onclick="Engine.Start()">Iniciar</button>

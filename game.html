@@ -1,0 +1,89 @@
+<style>
+body{
+margin:0;
+padding:0;
+}
+</style>
+<canvas id="canvas" style="background:lightblue;width:80%;height:80%;">
+
+</canvas>
+<script src="./game.js"></script>
+
+<script>
+Engine.iterate((o,k)=>{this[k]=o})
+let gm = new GameObject(function(ctx,x,y){
+
+    ctx.fillStyle='blue'
+    ctx.fillRect(x,y,10,10)
+
+})
+
+gm.dy=0
+gm.dx=0
+gm.Physics = function(ctx){
+
+this.mass=8
+if(this.y+this.dy+10<ctx.canvas.height)
+{
+	this.dy+=this.mass/16
+	this.y+=this.dy
+	
+
+}
+else
+{
+	this.dy= (this.mass-this.dy)
+	this.y=ctx.canvas.height-10
+}
+
+	this.x+=this.dx
+}
+
+gm.Controls = function(ctx){
+	if(!this.stamina>0)this.stamina=1
+	let dx = 0
+	let v = 3
+	
+	if(Engine.keymap["d"]||Engine.keymap["ArrowRight"])
+		dx += v
+	if(Engine.keymap["a"]||Engine.keymap["ArrowLeft"])
+		dx -= v
+	if(Engine.keymap["Shift"])
+	{
+		dx *= 1 + (1*this.stamina)
+		this.stamina-=0.01
+		if(this.stamina<0)this.stamina=0
+		ctx.fillStyle='black'	
+		ctx.fillText(this.stamina,this.x,this.y - 10)
+		
+	}
+	else if (this.stamina+0.05<=1)this.stamina += 0.05
+	this.dx = dx
+
+	if(this.y+10 == ctx.canvas.height &&(
+		Engine.keymap["w"]||Engine.keymap[" "]||Engine.keymap["ArrowUp"]))
+		this.dy =this.dy<-7?this.dy:-7 	
+
+}
+
+gm.Camera = function(ctx){
+	
+	Engine.offset.x = this.x+140
+}
+
+gm.Update=function(ctx){
+
+	console.log('offset:' +Engine.offset.x+'  \n  x:'+this.x)
+	Engine.offset.x = this.x
+
+this.Physics(ctx)
+this.Controls(ctx)
+this.Camera(ctx)
+	
+}
+	
+Engine.objects[0] = gm
+delete(gm)
+
+Engine.Start(50)
+</script>

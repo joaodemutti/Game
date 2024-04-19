@@ -1,0 +1,65 @@
+<style>
+.btn
+{
+	padding:12px 24px;
+	min-width:90px;
+	background:
+		linear-gradient(#f00 5%,#ff0 40% 50%,#0f0,#010),
+		linear-gradient(90deg,#010,#0f0,#ff0 40% 50%,#f00 5%)
+	;
+}
+.btn:hover{
+	background:
+		linear-gradient(0,#f00 5%,#ff0 40% 50%,#0f0,#010),
+		linear-gradient(90deg,#010,#0f0,#ff0 40% 50%,#f00 5%)
+	;
+}
+.btn
+{
+	border-radius:12px;
+	display:inline-block;
+}
+</style>
+<form>
+	<center>
+		<button class="b-red" type="button" onclick="toggleClick(this,event)">Toggle</button>
+		<br/>
+		<input id="txtTexto" type="text" />
+		<br/>
+		<input type="submit"/>
+		<br/>
+		<a class="bt">Link</a>
+		<button class="btn" type="button" onclick="anime(document.querySelector('.btn'),5,2,[{color:''}])">Anime</button>
+	</center>
+</form>
+
+<script>
+
+	var input 
+	const toggleClick = (sender,e)=>{
+		console.log(sender)
+		console.log(e)
+		input = document.querySelector('#txtTexto')
+		console.log(input)
+		input.disabled = !input.disabled
+		
+	}
+var c = false
+const anime = (b,t,s,colors_sizes) => {
+	var i = setInterval((h)=>
+	{
+	index = 0
+	if (c) b.style.background = "linear-gradient(0,#f00 5%,#ff0 40% 50%,#0f0,#010),linear-gradient(90deg,#010,#0f0,#ff0 40% 50%,#f00 5%)";
+	else b.style.background = "linear-gradient(#f00 5%,#ff0 40% 50%,#0f0,#010),linear-gradient(90deg,#010,#0f0,#ff0 40% 50%,#f00 5%)";
+	c = ! c;
+	},t*100
+	)
+	console.log(i)
+};
+
+
+
+
+
+
+</script>
